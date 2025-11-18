@@ -1,7 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
-export default async function TemplatesAdminPage() {
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
+export default async function TemplatesPage() {
   // Fetch all templates with their owner information
   const templates = await prisma.pdfTemplate.findMany({
     orderBy: { name: 'asc' },

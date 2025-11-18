@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import FieldManagerWithPreview from '@/components/FieldManagerWithPreview';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 type PageProps = {
   params: Promise<{ id: string }>;
 };

@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import CompanyForm from '@/components/CompanyForm';
 import Link from 'next/link';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function EditCompanyPage({
   params,
 }: {

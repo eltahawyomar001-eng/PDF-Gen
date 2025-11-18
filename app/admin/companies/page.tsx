@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function CompaniesAdminPage() {
   const companies = await prisma.company.findMany({
     orderBy: { name: 'asc' },

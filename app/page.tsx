@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import PdfGeneratorForm from '@/components/PdfGeneratorForm';
 import Link from 'next/link';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   // Server-side fetch companies and templates
   const companies = await prisma.company.findMany({
