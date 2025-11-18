@@ -1,6 +1,3 @@
 #!/bin/sh
-# Only set default DATABASE_URL if not already set
-if [ -z "$DATABASE_URL" ]; then
-  export DATABASE_URL="file:./dev.db"
-fi
+# Generate Prisma Client (doesn't require DATABASE_URL)
 npx prisma generate
