@@ -158,11 +158,48 @@ Dynamic CRUD interface for managing multiple companies with all German business 
 
 ## 🔧 Configuration
 
+### Local Development
+
 The application uses environment variables for configuration. Create a `.env` file:
 
 ```env
 DATABASE_URL="file:./dev.db"
 ```
+
+### Production Deployment (Vercel)
+
+**Important:** SQLite is not compatible with Vercel's serverless architecture. For production deployment:
+
+1. **Set up PostgreSQL Database:**
+   - Use [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres)
+   - Or [Supabase](https://supabase.com/)
+   - Or any PostgreSQL provider
+
+2. **Update Prisma Schema:**
+   ```prisma
+   // prisma/schema.prisma
+   datasource db {
+     provider = "postgresql"  // Change from "sqlite"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+3. **Set Environment Variable in Vercel:**
+   - Go to your Vercel project settings
+   - Add `DATABASE_URL` with your PostgreSQL connection string
+   - Example: `postgresql://user:password@host:5432/dbname`
+
+4. **Deploy and Migrate:**
+   ```bash
+   git push origin main
+   # After deployment, run migrations in Vercel CLI or dashboard
+   npx prisma migrate deploy
+   ```
+
+5. **Seed the Database (optional):**
+   ```bash
+   npm run seed
+   ```
 
 ## 📄 License
 
