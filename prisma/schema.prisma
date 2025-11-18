@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// German company data
+model Company {
+  id              Int      @id @default(autoincrement())
+  name            String
+  street          String
+  postalCode      String
+  city            String
+  country         String
+  taxId           String?   // e.g. USt-IdNr
+  iban            String? 
+  contactPerson   String?
+  email           String?
+  phone           String?
+  fax             String?
+  hrNr            String?   // Handelsregister-Nummer
+  registergericht String?   // z.B. "Amtsgericht München"
+  bimaNummer      String?   // BIMA-Nummer
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  templates       PdfTemplate[] @relation("CompanyTemplates")
+}
+
+// PDF template definitions
+model PdfTemplate {
+  id          Int         @id @default(autoincrement())
+  name        String      // e.g. "Standard Liefervertrag"
+  description String?
+  fileName    String      // e.g. "liefervertrag_v1.pdf" in public/pdf-templates
+
+  // optional: template can be associated with one main company (e.g. the sender)
+  ownerId     Int?
+  owner       Company?    @relation("CompanyTemplates", fields: [ownerId], references: [id])
+
+  fields      PdfField[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// PDF field mappings for templates
+model PdfField {
+  id          Int         @id @default(autoincrement())
+  template    PdfTemplate @relation(fields: [templateId], references: [id])
+  templateId  Int
+
+  // key must match a field on Company (e.g. "name", "street", "postalCode")
+  fieldKey    String
+  label       String      // human-readable, e.g. "Firmenname"
+
+  page        Int         // 0-based page index
+  x           Float       // x coordinate in PDF user space
+  y           Float       // y coordinate
+  fontSize    Float       // font size in points
+  maxWidth    Float?      // optional max text width
+  align       String      // "left" | "center" | "right"
+}
