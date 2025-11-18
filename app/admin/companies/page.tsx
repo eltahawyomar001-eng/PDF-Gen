@@ -84,7 +84,7 @@ export default async function CompaniesAdminPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {companies.map((company) => (
+                  {companies.map((company: any) => (
                     <tr key={company.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
