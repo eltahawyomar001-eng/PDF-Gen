@@ -2,6 +2,8 @@
   "name": "german-pdf-gen",
   "version": "0.1.0",
   "private": true,
+  "author": "Omar Rageh <omar.rageh@example.com>",
+  "description": "German PDF generation system with dynamic company management",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
