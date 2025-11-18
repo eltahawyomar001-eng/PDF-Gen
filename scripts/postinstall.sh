@@ -1,4 +1,6 @@
 #!/bin/sh
-# Set a default DATABASE_URL if not provided
-export DATABASE_URL="${DATABASE_URL:-file:./dev.db}"
+# Only set default DATABASE_URL if not already set
+if [ -z "$DATABASE_URL" ]; then
+  export DATABASE_URL="file:./dev.db"
+fi
 npx prisma generate
