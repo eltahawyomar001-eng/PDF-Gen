@@ -11,6 +11,11 @@ type PageProps = {
 };
 
 export default async function TemplateDetailPage({ params }: PageProps) {
+  // Skip database queries during build
+  if (!process.env.DATABASE_URL) {
+    return <div>Loading...</div>;
+  }
+
   const { id } = await params;
   const templateId = parseInt(id, 10);
 

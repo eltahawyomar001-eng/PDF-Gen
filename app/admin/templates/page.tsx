@@ -5,6 +5,11 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function TemplatesPage() {
+  // Skip database queries during build
+  if (!process.env.DATABASE_URL) {
+    return <div>Loading...</div>;
+  }
+
   // Fetch all templates with their owner information
   const templates = await prisma.pdfTemplate.findMany({
     orderBy: { name: 'asc' },

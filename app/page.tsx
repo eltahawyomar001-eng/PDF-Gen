@@ -6,6 +6,11 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  // Skip database queries during build
+  if (!process.env.DATABASE_URL) {
+    return <div>Loading...</div>;
+  }
+
   // Server-side fetch companies and templates
   const companies = await prisma.company.findMany({
     orderBy: { name: 'asc' },

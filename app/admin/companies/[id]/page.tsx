@@ -11,6 +11,11 @@ export default async function EditCompanyPage({
 }: {
   params: { id: string };
 }) {
+  // Skip database queries during build
+  if (!process.env.DATABASE_URL) {
+    return <div>Loading...</div>;
+  }
+
   const companyId = parseInt(params.id);
 
   if (isNaN(companyId)) {
