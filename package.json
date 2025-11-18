@@ -6,7 +6,7 @@
   "description": "German PDF generation system with dynamic company management",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "sh scripts/postinstall.sh && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "sh scripts/postinstall.sh"
