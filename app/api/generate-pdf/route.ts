@@ -72,101 +72,52 @@ export async function POST(request: Request) {
 
     console.log(`Found template: ${template.name}`);
 
+    // Fetch the PDF field mappings for this template
+    const fieldMappings = await prisma.pdfField.findMany({
+      where: { templateId: templateId },
+    });
+
+    console.log(`Found ${fieldMappings.length} field mappings for template`);
+
     // Load the PDF template from filesystem
     const pdfBytes = await loadPdfTemplate(template.fileName);
     console.log(`Loaded PDF template: ${template.fileName} (${pdfBytes.length} bytes)`);
 
     // Load the PDF with pdf-lib
     const pdfDoc = await PDFDocument.load(pdfBytes);
-    const form = pdfDoc.getForm();
-    console.log(`PDF has ${form.getFields().length} form fields`);
+    const pages = pdfDoc.getPages();
+    console.log(`PDF has ${pages.length} pages`);
 
-    // Fill the actual PDF form fields with company data
+    // Use the dynamic field mappings to draw text on the PDF
     let fieldsFilledCount = 0;
 
-    // Company address (multiline field)
-    try {
-      const addressField = form.getTextField('EVM_B_ANG_ANGEBOTS_BIETERANSCHRIFT');
-      const addressText = `${company.name}\n${company.street}\n${company.postalCode} ${company.city}\n${company.country}`;
-      addressField.setText(addressText);
-      console.log('✓ Filled EVM_B_ANG_ANGEBOTS_BIETERANSCHRIFT');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill address field');
+    for (const fieldMapping of fieldMappings) {
+      try {
+        // Get the value from the company object based on fieldKey
+        const value = company[fieldMapping.fieldKey as keyof typeof company];
+        const valueToFill = value ? String(value) : '';
+        
+        if (valueToFill && fieldMapping.page < pages.length) {
+          const page = pages[fieldMapping.page];
+          const { height } = page.getSize();
+          
+          // Draw text at the specified coordinates
+          page.drawText(valueToFill, {
+            x: fieldMapping.x,
+            y: height - fieldMapping.y, // PDF coords are bottom-up
+            size: fieldMapping.fontSize,
+            maxWidth: fieldMapping.maxWidth || undefined,
+          });
+          
+          console.log(`✓ Filled ${fieldMapping.fieldKey} at (${fieldMapping.x}, ${fieldMapping.y})`);
+          fieldsFilledCount++;
+        }
+      } catch (e) {
+        console.log(`⚠ Could not fill field ${fieldMapping.fieldKey}:`, e);
+      }
     }
 
-    // Location/City
-    try {
-      const ortField = form.getTextField('BIETER_ORT');
-      ortField.setText(company.city || '');
-      console.log('✓ Filled BIETER_ORT');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill ORT field');
-    }
-
-    // Telephone
-    try {
-      const telField = form.getTextField('BIETER_TEL');
-      telField.setText(company.phone || '');
-      console.log('✓ Filled BIETER_TEL');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill TEL field');
-    }
-
-    // Fax
-    try {
-      const faxField = form.getTextField('BIETER_FAX');
-      faxField.setText(company.fax || '');
-      console.log('✓ Filled BIETER_FAX');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill FAX field');
-    }
-
-    // Email
-    try {
-      const emailField = form.getTextField('BIETER_EMAIL');
-      emailField.setText(company.email || '');
-      console.log('✓ Filled BIETER_EMAIL');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill EMAIL field');
-    }
-
-    // Tax ID (USt-IdNr)
-    try {
-      const ustField = form.getTextField('BIETER_UST_ID');
-      ustField.setText(company.taxId || '');
-      console.log('✓ Filled BIETER_UST_ID');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill UST_ID field');
-    }
-
-    // Commercial Register Number (HR-Nr)
-    try {
-      const hrField = form.getTextField('BIETER_HR_NR');
-      hrField.setText(company.hrNr || '');
-      console.log('✓ Filled BIETER_HR_NR');
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill HR_NR field');
-    }
-
-    // Date (current date)
-    try {
-      const datumField = form.getTextField('BIETER_DATUM');
-      const today = new Date().toLocaleDateString('de-DE');
-      datumField.setText(today);
-      console.log('✓ Filled BIETER_DATUM with', today);
-      fieldsFilledCount++;
-    } catch (e) {
-      console.log('⚠ Could not fill DATUM field');
-    }
-
-    console.log(`Successfully filled ${fieldsFilledCount} form fields`);
+    console.log(`Successfully filled ${fieldsFilledCount} fields using coordinate mappings`);
 
     // Save the modified PDF
     const filledPdfBytes = await pdfDoc.save();

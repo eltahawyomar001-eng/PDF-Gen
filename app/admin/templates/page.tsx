@@ -32,19 +32,39 @@ export default async function TemplatesPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 flex justify-between items-start">
+          <div>
+            <Link
+              href="/"
+              className="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            >
+              ← Zurück zur Hauptseite
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Vorlagenübersicht
+            </h1>
+            <p className="text-gray-600">
+              Alle PDF-Vorlagen verwalten und bearbeiten
+            </p>
+          </div>
           <Link
-            href="/"
-            className="text-sm text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            href="/admin/templates/new"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
-            ← Zurück zur Hauptseite
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Neue Vorlage
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Vorlagenübersicht
-          </h1>
-          <p className="text-gray-600">
-            Alle PDF-Vorlagen verwalten und bearbeiten
-          </p>
         </div>
 
         {/* Templates List */}
