@@ -28,6 +28,8 @@ export default function TemplateForm({ template }: TemplateFormProps) {
   const [availableFiles, setAvailableFiles] = useState<string[]>([]);
   const [companies, setCompanies] = useState<Array<{ id: number; name: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
@@ -43,17 +45,60 @@ export default function TemplateForm({ template }: TemplateFormProps) {
         }
 
         // Fetch available PDF files
-        const filesRes = await fetch('/api/pdf-files');
-        if (filesRes.ok) {
-          const filesData = await filesRes.json();
-          setAvailableFiles(filesData.files || []);
-        }
+        await fetchPdfFiles();
       } catch (err) {
         console.error('Error fetching data:', err);
       }
     }
     fetchData();
   }, []);
+
+  const fetchPdfFiles = async () => {
+    try {
+      const filesRes = await fetch('/api/pdf-files');
+      if (filesRes.ok) {
+        const filesData = await filesRes.json();
+        setAvailableFiles(filesData.files || []);
+      }
+    } catch (err) {
+      console.error('Error fetching PDF files:', err);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Refresh the file list
+        await fetchPdfFiles();
+        // Set the uploaded file as selected
+        setFormData(prev => ({ ...prev, fileName: data.fileName }));
+      } else {
+        setUploadError(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      setUploadError('Failed to upload file');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +185,47 @@ export default function TemplateForm({ template }: TemplateFormProps) {
         <label htmlFor="fileName" className="block text-sm font-medium text-gray-700 mb-1">
           PDF-Datei *
         </label>
+        
+        {/* Upload Section */}
+        <div className="mb-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center gap-4">
+            <label className="flex-1">
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                className="hidden"
+                id="pdf-upload"
+              />
+              <span className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                {isUploading ? 'Hochladen...' : 'PDF hochladen'}
+              </span>
+            </label>
+          </div>
+          {uploadError && (
+            <p className="mt-2 text-sm text-red-600">{uploadError}</p>
+          )}
+          <p className="mt-2 text-xs text-gray-500">
+            Max. 10MB • Nur PDF-Dateien
+          </p>
+        </div>
+
+        {/* File Selection Dropdown */}
         <select
           id="fileName"
           value={formData.fileName}
@@ -157,9 +243,6 @@ export default function TemplateForm({ template }: TemplateFormProps) {
         {getFieldError('fileName') && (
           <p className="mt-1 text-sm text-red-600">{getFieldError('fileName')}</p>
         )}
-        <p className="mt-1 text-sm text-gray-500">
-          Dateien müssen in <code className="bg-gray-100 px-1">public/pdf-templates/</code> gespeichert sein
-        </p>
       </div>
 
       {/* Owner (Company) */}
