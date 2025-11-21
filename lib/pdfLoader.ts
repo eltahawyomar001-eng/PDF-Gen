@@ -2,21 +2,36 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 
 /**
- * Server-side utility to load PDF templates from the filesystem.
+ * Server-side utility to load PDF templates from filesystem or URL.
  * This should ONLY be used in server contexts (API routes, Server Actions, etc.)
  * 
- * @param fileName - The name of the PDF file (e.g., "vertrag_v1.pdf")
+ * @param source - Either a fileName (local file) or a full URL (blob storage)
  * @returns Uint8Array containing the PDF file data that can be used with pdf-lib
- * @throws Error if the file doesn't exist or can't be read
+ * @throws Error if the file/URL doesn't exist or can't be read
  */
-export async function loadPdfTemplate(fileName: string): Promise<Uint8Array> {
+export async function loadPdfTemplate(source: string): Promise<Uint8Array> {
   // Ensure we're running on the server
   if (typeof window !== 'undefined') {
     throw new Error('loadPdfTemplate can only be called on the server side');
   }
 
+  // Check if source is a URL (blob storage)
+  if (source.startsWith('http://') || source.startsWith('https://')) {
+    try {
+      const response = await fetch(source);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF from URL: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return new Uint8Array(arrayBuffer);
+    } catch (error) {
+      throw new Error(`Failed to load PDF from URL: ${(error as Error).message}`);
+    }
+  }
+
+  // Otherwise, treat as local filename
   // Sanitize the fileName to prevent directory traversal attacks
-  const sanitizedFileName = path.basename(fileName);
+  const sanitizedFileName = path.basename(source);
   
   // Construct the full path to the PDF template
   // In Next.js, process.cwd() points to the project root

@@ -88,11 +88,13 @@ export default function TemplateForm({ template }: TemplateFormProps) {
         await fetchPdfFiles();
         // Set the uploaded file as selected
         setFormData(prev => ({ ...prev, fileName: data.fileName }));
+        setUploadError(null);
       } else {
-        setUploadError(data.error || 'Upload failed');
+        setUploadError(data.error || 'Upload fehlgeschlagen');
       }
     } catch (err) {
-      setUploadError('Failed to upload file');
+      setUploadError('Fehler beim Hochladen der Datei');
+      console.error('Upload error:', err);
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -213,7 +215,7 @@ export default function TemplateForm({ template }: TemplateFormProps) {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                {isUploading ? 'Hochladen...' : 'PDF hochladen'}
+                {isUploading ? 'Hochladen...' : 'Neue PDF hochladen'}
               </span>
             </label>
           </div>
@@ -221,7 +223,7 @@ export default function TemplateForm({ template }: TemplateFormProps) {
             <p className="mt-2 text-sm text-red-600">{uploadError}</p>
           )}
           <p className="mt-2 text-xs text-gray-500">
-            Max. 10MB • Nur PDF-Dateien
+            Max. 10MB • Nur PDF-Dateien • Wird in Cloud-Speicher hochgeladen
           </p>
         </div>
 

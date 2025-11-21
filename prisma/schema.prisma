@@ -40,7 +40,8 @@ model PdfTemplate {
   id          Int         @id @default(autoincrement())
   name        String      // e.g. "Standard Liefervertrag"
   description String?
-  fileName    String      // e.g. "liefervertrag_v1.pdf" in public/pdf-templates
+  fileName    String      // e.g. "liefervertrag_v1.pdf" in public/pdf-templates (legacy local files)
+  fileUrl     String?     // URL for files stored in cloud storage (Vercel Blob, S3, etc.)
 
   // optional: template can be associated with one main company (e.g. the sender)
   ownerId     Int?

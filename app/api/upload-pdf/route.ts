@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,51 +8,48 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { error: 'Keine Datei hochgeladen' },
         { status: 400 }
       );
     }
 
     // Validate file type
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
+    if (!file.type.includes('pdf')) {
       return NextResponse.json(
-        { error: 'Only PDF files are allowed' },
+        { error: 'Nur PDF-Dateien sind erlaubt' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File size must be less than 10MB' },
+        { error: 'Datei ist zu groß. Maximale Größe: 10MB' },
         { status: 400 }
       );
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Sanitize filename
+    const sanitizedFileName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/_{2,}/g, '_');
 
-    // Sanitize filename (remove special characters except dots, underscores, and hyphens)
-    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-
-    // Define upload path
-    const uploadDir = path.join(process.cwd(), 'public', 'pdf-templates');
-    const filePath = path.join(uploadDir, sanitizedFileName);
-
-    // Write file to disk
-    await writeFile(filePath, buffer);
+    // Upload to Vercel Blob Storage
+    const blob = await put(`pdf-templates/${sanitizedFileName}`, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
 
     return NextResponse.json({
       success: true,
       fileName: sanitizedFileName,
-      message: 'File uploaded successfully',
+      url: blob.url,
     });
   } catch (error) {
-    console.error('File upload error:', error);
+    console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Fehler beim Hochladen der Datei' },
       { status: 500 }
     );
   }

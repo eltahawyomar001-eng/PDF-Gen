@@ -79,9 +79,10 @@ export async function POST(request: Request) {
 
     console.log(`Found ${fieldMappings.length} field mappings for template`);
 
-    // Load the PDF template from filesystem
-    const pdfBytes = await loadPdfTemplate(template.fileName);
-    console.log(`Loaded PDF template: ${template.fileName} (${pdfBytes.length} bytes)`);
+    // Load the PDF template from blob storage (fileUrl) or local filesystem (fileName)
+    const pdfSource = template.fileUrl || template.fileName;
+    const pdfBytes = await loadPdfTemplate(pdfSource);
+    console.log(`Loaded PDF template from ${template.fileUrl ? 'blob storage' : 'local file'}: ${pdfSource} (${pdfBytes.length} bytes)`);
 
     // Load the PDF with pdf-lib
     const pdfDoc = await PDFDocument.load(pdfBytes);
